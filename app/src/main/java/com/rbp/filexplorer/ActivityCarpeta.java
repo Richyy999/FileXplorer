@@ -39,7 +39,6 @@ import java.util.List;
 public class ActivityCarpeta extends AppCompatActivity implements Adaptador.CustomClickListener {
 
     private RecyclerView rv;
-    private RecyclerView.LayoutManager lm;
     private Adaptador adapter;
 
     private RecyclerView recyvlerBuscar;
@@ -134,6 +133,7 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
             @Override
             public boolean onMenuItemActionCollapse(MenuItem item) {
                 closeSearchBar();
+                getFiles();
                 return true;
             }
         });
@@ -219,7 +219,6 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
         rv.setVisibility(View.VISIBLE);
         rv.setEnabled(true);
         this.modoBuscar = false;
-        updateFileList();
     }
 
     private void cargarBusqueda(String query) {
@@ -271,7 +270,7 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
         rv = findViewById(R.id.recyclerCarpeta);
         rv.setHasFixedSize(false);
 
-        lm = new LinearLayoutManager(this);
+        RecyclerView.LayoutManager lm = new LinearLayoutManager(this);
         rv.setLayoutManager(lm);
 
         lblNoResult = findViewById(R.id.lblNoResults);
@@ -332,6 +331,7 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
     }
 
     public void updateFileList() {
+        closeSearchBar();
         getFiles();
     }
 
@@ -390,5 +390,16 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
 
     public Archivo getCarpeta() {
         return this.carpeta;
+    }
+
+    public void launchCarpeta(Archivo carpeta) {
+        if (!carpeta.getAbsolutePath().equals(Archivo.ROOT_PATH)) {
+            Intent intent = new Intent(ActivityCarpeta.this, ActivityCarpeta.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.putExtra("path", carpeta.getAbsolutePath());
+            startActivity(intent);
+        } else {
+            finish();
+        }
     }
 }

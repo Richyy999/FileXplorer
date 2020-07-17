@@ -1,18 +1,16 @@
 package com.rbp.filexplorer;
 
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.rbp.filexplorer.modelo.FileUtils;
 import com.rbp.filexplorer.modelo.entidad.Archivo;
+
+import java.util.Objects;
 
 public class DialogDetalles extends Dialog {
 
@@ -21,8 +19,6 @@ public class DialogDetalles extends Dialog {
     private Button btnOk;
 
     private Archivo archivo;
-
-    private FileUtils fileUtils;
 
     private ActivityCarpeta activityCarpeta;
 
@@ -37,11 +33,10 @@ public class DialogDetalles extends Dialog {
         super(activity);
         this.activityCarpeta = activity;
         this.archivo = archivo;
-        this.fileUtils = new FileUtils();
     }
 
     private void cargarVista() {
-        this.getWindow().setBackgroundDrawableResource(R.drawable.fondo_dialog_redondo);
+        Objects.requireNonNull(this.getWindow()).setBackgroundDrawableResource(R.drawable.fondo_dialog_redondo);
 
         ImageView imgLogo = findViewById(R.id.imgIconoDetalles);
         imgLogo.setImageBitmap(this.archivo.getIcono());
@@ -81,8 +76,6 @@ public class DialogDetalles extends Dialog {
 
         this.btnOk = findViewById(R.id.btnOkDetalles);
 
-        imgLogo = findViewById(R.id.imgIconoDetalles);
-
         cargarListeners();
     }
 
@@ -98,9 +91,9 @@ public class DialogDetalles extends Dialog {
             @Override
             public void onClick(View v) {
                 if (archivo.isDirectory())
-                    activityCarpeta.launchParentActivity(archivo);
+                    activityCarpeta.launchCarpeta(archivo);
                 else
-                    fileUtils.openFile(archivo, activityCarpeta);
+                    activityCarpeta.launchParentActivity(archivo);
                 dismiss();
             }
         });

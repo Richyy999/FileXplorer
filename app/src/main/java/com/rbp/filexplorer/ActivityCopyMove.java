@@ -2,6 +2,7 @@ package com.rbp.filexplorer;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 
@@ -76,7 +77,7 @@ public class ActivityCopyMove extends AppCompatActivity implements Adaptador.Cus
     @Override
     public void onBackPressed() {
         if (path.equals(Archivo.ROOT_PATH))
-            launchActivityCarpeta();
+            launchActivityCarpeta(archivos.get(0));
         else
             finish();
     }
@@ -106,14 +107,14 @@ public class ActivityCopyMove extends AppCompatActivity implements Adaptador.Cus
                 adaptador.notifyDataSetChanged();
                 if (modo.equals(getResources().getString(R.string.move)))
                     fileUtils.delete(archivos);
-                launchActivityCarpeta();
+                launchActivityCarpeta(carpeta);
             }
         });
 
         this.btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                launchActivityCarpeta();
+                launchActivityCarpeta(fileUtils.getArchivosFromPath(paths).get(0).getParentFile());
             }
         });
 
@@ -125,9 +126,12 @@ public class ActivityCopyMove extends AppCompatActivity implements Adaptador.Cus
         });
     }
 
-    private void launchActivityCarpeta() {
+    private void launchActivityCarpeta(File folder) {
         Intent intent = new Intent(ActivityCopyMove.this, ActivityCarpeta.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        Log.d("PATH", folder.getAbsolutePath());
+        if (!folder.getAbsolutePath().equals(Archivo.ROOT_PATH))
+            intent.putExtra("path", folder.getAbsolutePath());
         startActivity(intent);
     }
 
@@ -137,6 +141,7 @@ public class ActivityCopyMove extends AppCompatActivity implements Adaptador.Cus
         File[] archivos = carpeta.listFiles();
         List<Archivo> fileList = new ArrayList<>();
         for (File file : archivos) {
+            Log.d("FILES", file.getAbsolutePath());
             fileList.add(new Archivo(file.getAbsolutePath(), this));
         }
         this.archivos = this.fileUtils.getSortedFiles(fileList);
