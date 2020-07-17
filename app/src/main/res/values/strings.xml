@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">File Xplorer</string>
+    <string name="rename">Renombrar</string>
+    <string name="copy">Copiar</string>
+    <string name="move">Mover</string>
+    <string name="more">Más</string>
+    <string name="remove">Eliminar</string>
+    <string name="alertDelete">¿Desea eliminar estos archivos de manera permanente?</string>
+    <string name="alertDelete1">¿Desea eliminar este archivo de manera permanente?</string>
+    <string name="cancel">Cancelar</string>
+    <string name="paste">Pegar</string>
+    <string name="folder">Carpeta</string>
+    <string name="deleting">Eliminando…</string>
+    <string name="createNewFolder">Crear Carpeta</string>
+    <string name="openInApp">Abrir en otra aplicación</string>
+    <string name="details">Detalles</string>
+    <string name="renameFile">Renombrar archivo</string>
+    <string name="renameFolder">Renombrar carpeta</string>
+    <string name="changeExtension">Cambiar extensión</string>
+    <string name="changeExtensionMessage">¿Desea cambiar la extensión del archivo?\nPodrías no poder abrirlo</string>
+    <string name="OK">OK</string>
+    <string name="folderName">Nombre de la carpeta</string>
+    <string name="path">Ruta:</string>
+    <string name="size">Tamaño:</string>
+    <string name="lastModification">Última modificación:</string>
+    <string name="readble">Lectura:</string>
+    <string name="writable">Escritura:</string>
+    <string name="hidden">Oculto:</string>
+    <string name="yes">Sí</string>
+    <string name="no">No</string>
+    <string name="type">Tipo:</string>
+    <string name="search">Buscar</string>
+    <string name="searchFile">Buscar archivo</string>
+    <string name="noResults">No se ha encontrado ningún archivo con el nombre indicado</string>
+</resources>
