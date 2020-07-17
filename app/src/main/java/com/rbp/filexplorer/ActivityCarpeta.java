@@ -16,7 +16,6 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -44,6 +43,7 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
     private Adaptador adapter;
 
     private RecyclerView recyvlerBuscar;
+    private Adaptador adaptadorBuscar;
 
     private TextView lblNoResult;
 
@@ -61,9 +61,11 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
 
     private List<Archivo> archivos;
     private List<Archivo> archivosSeleccionados;
+    private List<Archivo> archivosBuscados;
 
     private boolean isClicable;
     private boolean modoSeleccion;
+    private boolean modoBuscar;
 
     private String path;
 
@@ -76,6 +78,7 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
         this.fileUtils = new FileUtils();
         path = getIntent().getStringExtra("path");
         isClicable = true;
+        modoBuscar = false;
         if (path != null)
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
@@ -113,7 +116,7 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                cargarBusqueda(fileUtils.find(carpeta, query, ActivityCarpeta.this));
+                cargarBusqueda(query);
                 return false;
             }
 
@@ -125,13 +128,13 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
         searchItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
             @Override
             public boolean onMenuItemActionExpand(MenuItem item) {
-                return false;
+                return true;
             }
 
             @Override
             public boolean onMenuItemActionCollapse(MenuItem item) {
                 closeSearchBar();
-                return false;
+                return true;
             }
         });
         return super.onCreateOptionsMenu(menu);
@@ -153,7 +156,10 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
     @Override
     public void longClick(int position) {
         modoSeleccion = true;
-        seleccionarArchivo(this.archivos.get(position));
+        if (modoBuscar)
+            seleccionarArchivo(archivosBuscados.get(position));
+        else
+            seleccionarArchivo(this.archivos.get(position));
         this.snackbarMenu = new SnackbarMenu(findViewById(android.R.id.content), this.archivosSeleccionados, this);
         this.snackbar = this.snackbarMenu.getSnackbar();
         this.snackbar.show();
@@ -163,7 +169,11 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
 
     @Override
     public void click(int position) {
-        Archivo archivo = archivos.get(position);
+        Archivo archivo;
+        if (modoBuscar)
+            archivo = archivosBuscados.get(position);
+        else
+            archivo = archivos.get(position);
         if (!modoSeleccion) {
             if (isClicable) {
                 isClicable = false;
@@ -195,6 +205,8 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
     public void onBackPressed() {
         if (this.modoSeleccion)
             clearModoSeleccion();
+        else if (modoBuscar)
+            closeSearchBar();
         else
             launchParentActivity(carpeta);
     }
@@ -206,19 +218,25 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
         recyvlerBuscar.setEnabled(false);
         rv.setVisibility(View.VISIBLE);
         rv.setEnabled(true);
+        this.modoBuscar = false;
         updateFileList();
     }
 
-    private void cargarBusqueda(List<Archivo> archivos) {
+    private void cargarBusqueda(String query) {
+        modoBuscar = true;
+        lblNoResult.setVisibility(View.INVISIBLE);
+        archivosBuscados = fileUtils.find(carpeta, query, this);
+
         rv.setVisibility(View.INVISIBLE);
         rv.setEnabled(false);
         recyvlerBuscar = findViewById(R.id.recyclerBuscarCarpeta);
         recyvlerBuscar.setLayoutManager(new LinearLayoutManager(this));
+        recyvlerBuscar.setVisibility(View.VISIBLE);
 
-        Adaptador adaptador = new Adaptador(archivos, this, this);
-        recyvlerBuscar.setAdapter(adaptador);
-        if (archivos.size() == 0) {
-            recyvlerBuscar.setVisibility(View.GONE);
+        adaptadorBuscar = new Adaptador(archivosBuscados, this, this);
+        recyvlerBuscar.setAdapter(adaptadorBuscar);
+        if (archivosBuscados.size() == 0) {
+            recyvlerBuscar.setVisibility(View.INVISIBLE);
             lblNoResult.setVisibility(View.VISIBLE);
         }
     }
@@ -230,19 +248,20 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
     }
 
     private void seleccionarArchivo(Archivo archivo) {
-        if (archivo.isSelected()) {
-            archivo.setSelected(false);
+        if (archivo.isSelected())
             this.archivosSeleccionados.remove(archivo);
-        } else {
-            archivo.setSelected(true);
+        else
             this.archivosSeleccionados.add(archivo);
-        }
+        archivo.setSelected(!archivo.isSelected());
         if (this.archivosSeleccionados.size() == 0) {
             this.modoSeleccion = false;
             this.snackbar.dismiss();
             pushDownRecyclerView();
         }
-        this.adapter.notifyDataSetChanged();
+        if (modoBuscar)
+            adaptadorBuscar.notifyDataSetChanged();
+        else
+            this.adapter.notifyDataSetChanged();
     }
 
     /**
@@ -360,7 +379,10 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
         }
         this.archivosSeleccionados.clear();
         this.modoSeleccion = false;
-        this.adapter.notifyDataSetChanged();
+        if (modoBuscar)
+            adaptadorBuscar.notifyDataSetChanged();
+        else
+            this.adapter.notifyDataSetChanged();
         if (this.snackbar != null)
             this.snackbar.dismiss();
         pushDownRecyclerView();
