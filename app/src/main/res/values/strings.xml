@@ -32,4 +32,11 @@
     <string name="search">Buscar</string>
     <string name="searchFile">Buscar archivo</string>
     <string name="noResults">No se ha encontrado ningún archivo con el nombre indicado</string>
+    <string name="descImgPlayPause">Icono con los botones de Play y Pause</string>
+    <string name="descImgCopy">Icono de Copiar</string>
+    <string name="descImgMove">Icono de Mover</string>
+    <string name="descImgDelete">Icono de Eliminar</string>
+    <string name="descImgMore">Icono de Más</string>
+    <string name="descImgIcono">Icono del Archivo</string>
+    <string name="descImgGrande">ImageView que muestra una foto del dispositivo</string>
 </resources>

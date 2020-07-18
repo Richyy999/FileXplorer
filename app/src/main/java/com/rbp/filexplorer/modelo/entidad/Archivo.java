@@ -49,16 +49,20 @@ public class Archivo extends File {
     public Bitmap getIcono() {
         Bitmap icono = null;
         Drawable d = null;
-        String tipo = getTipo();
+        String tipo = getTipo().toLowerCase();
         if (tipo.contains("video"))
             d = this.context.getResources().getDrawable(R.drawable.video);
         else if (tipo.contains("audio"))
             d = this.context.getResources().getDrawable(R.drawable.musica);
+        else if (tipo.contains("android"))
+            d = this.context.getResources().getDrawable(R.drawable.apk);
+        else if (tipo.contains("pdf"))
+            d = this.context.getResources().getDrawable(R.drawable.pdf);
         else if (this.isDirectory())
             d = this.context.getResources().getDrawable(R.drawable.carpeta_logo);
         else if (tipo.contains("image"))
             icono = BitmapFactory.decodeFile(this.getPath());
-        else if (tipo.contains("otro"))
+        else
             d = this.context.getResources().getDrawable(R.drawable.file);
         if (d != null)
             icono = ((BitmapDrawable) d).getBitmap();
