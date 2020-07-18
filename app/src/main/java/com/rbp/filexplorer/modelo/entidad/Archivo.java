@@ -13,6 +13,8 @@ import androidx.annotation.NonNull;
 import com.rbp.filexplorer.R;
 
 import java.io.File;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -100,19 +102,41 @@ public class Archivo extends File {
      * @return Si es una carpeta, devuelve el número de elementos que contiene. Si es un fichero, su peso
      */
     public String getTamano() {
+        String lengthStr;
         if (this.isDirectory()) {
             int length = this.listFiles().length;
             if (length == 1)
-                return "1 Elemento";
+                lengthStr = "1 Elemento";
             else
-                return length + " Elementos";
+                lengthStr = length + " Elementos";
         } else {
-            int length = (int) this.length() / 1024;
-            if (length / 1024 >= 1)
-                return (length / 1024) + " MB";
-            else
-                return length + " KB";
+            double length = this.length() / 1024;
+            if (length / 1048576 >= 0.8) {
+                length /= 1048576;
+                if (length % 1 == 0)
+                    lengthStr = length + " GB";
+                else
+                    lengthStr = (round(length, 2) + " GB");
+            } else if (length / 1024 >= 1) {
+                length /= 1024;
+                if (length % 1 == 0)
+                    lengthStr = (int) length + " MB";
+                else
+                    lengthStr = (round(length, 2)) + " MB";
+            } else {
+                if (length % 1 == 0)
+                    lengthStr = (int) length + " KB";
+                else
+                    lengthStr = (round(length, 2) + " KB");
+            }
         }
+        return lengthStr;
+    }
+
+    private double round(double numero, int decimales) {
+        BigDecimal bd = BigDecimal.valueOf(numero);
+        bd = bd.setScale(decimales, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 
     /**

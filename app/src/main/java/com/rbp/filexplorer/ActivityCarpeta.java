@@ -212,10 +212,13 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
     }
 
     private void closeSearchBar() {
-        System.out.println("CLOSE");
-        lblNoResult.setVisibility(View.INVISIBLE);
-        recyvlerBuscar.setVisibility(View.GONE);
-        recyvlerBuscar.setEnabled(false);
+        try {
+            lblNoResult.setVisibility(View.INVISIBLE);
+            recyvlerBuscar.setVisibility(View.GONE);
+            recyvlerBuscar.setEnabled(false);
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
         rv.setVisibility(View.VISIBLE);
         rv.setEnabled(true);
         this.modoBuscar = false;

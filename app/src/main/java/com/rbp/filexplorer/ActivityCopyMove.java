@@ -16,7 +16,6 @@ import com.rbp.filexplorer.modelo.FileUtils;
 import com.rbp.filexplorer.modelo.entidad.Archivo;
 
 import java.io.File;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,7 +23,6 @@ import java.util.List;
 public class ActivityCopyMove extends AppCompatActivity implements Adaptador.CustomClickListener {
 
     private RecyclerView recyclerView;
-    private RecyclerView.LayoutManager lm;
     private Adaptador adaptador;
 
     private LinearLayout btnPaste;
@@ -86,8 +84,8 @@ public class ActivityCopyMove extends AppCompatActivity implements Adaptador.Cus
         this.recyclerView = findViewById(R.id.recyclerCopyMove);
         this.recyclerView.setHasFixedSize(false);
 
-        this.lm = new LinearLayoutManager(this);
-        this.recyclerView.setLayoutManager(this.lm);
+        RecyclerView.LayoutManager lm = new LinearLayoutManager(this);
+        this.recyclerView.setLayoutManager(lm);
 
         this.btnCancel = findViewById(R.id.btnCancel);
         this.btnCreateFolder = findViewById(R.id.btnCreateFolder);
