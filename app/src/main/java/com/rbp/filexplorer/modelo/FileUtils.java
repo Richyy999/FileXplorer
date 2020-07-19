@@ -232,4 +232,25 @@ public class FileUtils {
         }
         return filesFounded;
     }
+
+    /**
+     * Devuelve una lista con todos las imágenes de la carpeta
+     *
+     * @param folder  carpeta contenedora
+     * @param context contexto de la aplicación
+     * @return List de Archivo con todos los archivos que sean imágenes
+     */
+    public List<Archivo> getImages(File folder, Context context) {
+        List<Archivo> images = new ArrayList<>();
+        List<Archivo> archivos = new ArrayList<>();
+        File[] files = folder.listFiles();
+        for (File file : files) {
+            archivos.add(new Archivo(file.getAbsolutePath(), context));
+        }
+        for (Archivo archivo : archivos) {
+            if (archivo.getTipo().toLowerCase().contains("image"))
+                images.add(archivo);
+        }
+        return images;
+    }
 }

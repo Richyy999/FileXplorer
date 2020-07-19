@@ -185,6 +185,7 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
                 else if (tipo.contains("image")) {
                     Intent intent = new Intent(this, ImageActivity.class);
                     intent.putExtra("img", archivo.getAbsolutePath());
+                    intent.putExtra("folder", carpeta.getAbsolutePath());
                     startActivity(intent);
                 } else
                     this.fileUtils.openFile(archivo, this);
