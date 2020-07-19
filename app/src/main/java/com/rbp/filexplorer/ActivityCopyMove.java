@@ -11,7 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.rbp.filexplorer.modelo.Adaptador;
+import com.rbp.filexplorer.modelo.AdaptadorCarpeta;
 import com.rbp.filexplorer.modelo.FileUtils;
 import com.rbp.filexplorer.modelo.entidad.Archivo;
 
@@ -20,10 +20,10 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class ActivityCopyMove extends AppCompatActivity implements Adaptador.CustomClickListener {
+public class ActivityCopyMove extends AppCompatActivity implements AdaptadorCarpeta.CustomClickListener {
 
     private RecyclerView recyclerView;
-    private Adaptador adaptador;
+    private AdaptadorCarpeta adaptadorCarpeta;
 
     private LinearLayout btnPaste;
     private LinearLayout btnCancel;
@@ -75,7 +75,7 @@ public class ActivityCopyMove extends AppCompatActivity implements Adaptador.Cus
     @Override
     public void onBackPressed() {
         if (path.equals(Archivo.ROOT_PATH))
-            launchActivityCarpeta(archivos.get(0));
+            launchActivityCarpeta(fileUtils.getArchivosFromPath(paths).get(0).getParentFile());
         else
             finish();
     }
@@ -102,7 +102,7 @@ public class ActivityCopyMove extends AppCompatActivity implements Adaptador.Cus
             public void onClick(View v) {
                 List<Archivo> archivos = fileUtils.getArchivosFromPath(paths);
                 fileUtils.copyFileOrFlder(archivos, carpeta);
-                adaptador.notifyDataSetChanged();
+                adaptadorCarpeta.notifyDataSetChanged();
                 if (modo.equals(getResources().getString(R.string.move)))
                     fileUtils.delete(archivos);
                 launchActivityCarpeta(carpeta);
@@ -143,8 +143,8 @@ public class ActivityCopyMove extends AppCompatActivity implements Adaptador.Cus
             fileList.add(new Archivo(file.getAbsolutePath(), this));
         }
         this.archivos = this.fileUtils.getSortedFiles(fileList);
-        this.adaptador = new Adaptador(this.archivos, this, this);
-        this.recyclerView.setAdapter(this.adaptador);
+        this.adaptadorCarpeta = new AdaptadorCarpeta(this.archivos, this, this);
+        this.recyclerView.setAdapter(this.adaptadorCarpeta);
     }
 
     public void updateFileList() {

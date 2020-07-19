@@ -14,11 +14,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.rbp.filexplorer.R;
 import com.rbp.filexplorer.modelo.entidad.Archivo;
 
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
-public class Adaptador extends RecyclerView.Adapter<Adaptador.MyHolder> {
+public class AdaptadorCarpeta extends RecyclerView.Adapter<AdaptadorCarpeta.MyHolder> {
 
     public static class MyHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
 
@@ -71,7 +69,7 @@ public class Adaptador extends RecyclerView.Adapter<Adaptador.MyHolder> {
 
     private Context context;
 
-    public Adaptador(List<Archivo> listaArchivos, CustomClickListener customClickListener, Context context) {
+    public AdaptadorCarpeta(List<Archivo> listaArchivos, CustomClickListener customClickListener, Context context) {
         this.listaArchivos = listaArchivos;
         this.customClickListener = customClickListener;
         this.context = context;
@@ -79,7 +77,7 @@ public class Adaptador extends RecyclerView.Adapter<Adaptador.MyHolder> {
 
     @NonNull
     @Override
-    public Adaptador.MyHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public AdaptadorCarpeta.MyHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.archivo, parent, false);
         return new MyHolder(v, customClickListener);
     }

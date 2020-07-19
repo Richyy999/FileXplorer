@@ -22,7 +22,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.google.android.material.snackbar.Snackbar;
-import com.rbp.filexplorer.modelo.Adaptador;
+import com.rbp.filexplorer.modelo.AdaptadorCarpeta;
 import com.rbp.filexplorer.modelo.FileUtils;
 import com.rbp.filexplorer.modelo.entidad.Archivo;
 
@@ -36,13 +36,13 @@ import java.util.List;
  *
  * @author Ricardo Bordería Pi
  */
-public class ActivityCarpeta extends AppCompatActivity implements Adaptador.CustomClickListener {
+public class ActivityCarpeta extends AppCompatActivity implements AdaptadorCarpeta.CustomClickListener {
 
     private RecyclerView rv;
-    private Adaptador adapter;
+    private AdaptadorCarpeta adapter;
 
     private RecyclerView recyvlerBuscar;
-    private Adaptador adaptadorBuscar;
+    private AdaptadorCarpeta adaptadorCarpetaBuscar;
 
     private TextView lblNoResult;
 
@@ -236,8 +236,8 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
         recyvlerBuscar.setLayoutManager(new LinearLayoutManager(this));
         recyvlerBuscar.setVisibility(View.VISIBLE);
 
-        adaptadorBuscar = new Adaptador(archivosBuscados, this, this);
-        recyvlerBuscar.setAdapter(adaptadorBuscar);
+        adaptadorCarpetaBuscar = new AdaptadorCarpeta(archivosBuscados, this, this);
+        recyvlerBuscar.setAdapter(adaptadorCarpetaBuscar);
         if (archivosBuscados.size() == 0) {
             recyvlerBuscar.setVisibility(View.INVISIBLE);
             lblNoResult.setVisibility(View.VISIBLE);
@@ -262,7 +262,7 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
             pushDownRecyclerView();
         }
         if (modoBuscar)
-            adaptadorBuscar.notifyDataSetChanged();
+            adaptadorCarpetaBuscar.notifyDataSetChanged();
         else
             this.adapter.notifyDataSetChanged();
     }
@@ -302,7 +302,7 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
             fileList.add(new Archivo(file.getAbsolutePath(), this));
         }
         this.archivos = this.fileUtils.getSortedFiles(fileList);
-        this.adapter = new Adaptador(this.archivos, this, this);
+        this.adapter = new AdaptadorCarpeta(this.archivos, this, this);
         rv.setAdapter(this.adapter);
     }
 
@@ -384,7 +384,7 @@ public class ActivityCarpeta extends AppCompatActivity implements Adaptador.Cust
         this.archivosSeleccionados.clear();
         this.modoSeleccion = false;
         if (modoBuscar)
-            adaptadorBuscar.notifyDataSetChanged();
+            adaptadorCarpetaBuscar.notifyDataSetChanged();
         else
             this.adapter.notifyDataSetChanged();
         if (this.snackbar != null)

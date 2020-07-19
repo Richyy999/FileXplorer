@@ -2,14 +2,15 @@ package com.rbp.filexplorer;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.viewpager.widget.ViewPager;
 
-import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageView;
 
+import com.rbp.filexplorer.modelo.AdaptadorImagen;
 import com.rbp.filexplorer.modelo.FileUtils;
 import com.rbp.filexplorer.modelo.SwipeListener;
 import com.rbp.filexplorer.modelo.entidad.Archivo;
@@ -18,22 +19,29 @@ import java.util.List;
 
 public class ImageActivity extends AppCompatActivity {
 
-    private Runnable runnable;
+    private View.OnClickListener onClickListener;
 
-    private ImageView img;
+    private SwipeListener swipeListener;
+
+    private Runnable showHideRunnable;
+    private Runnable enableRunnable;
+
+    private ViewPager viewPager;
 
     private List<Archivo> imagenes;
 
     private boolean isShowed;
+    private boolean isEnable;
 
-    private int index;
-
-    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        isShowed = false;
+        isEnable = true;
+        getSupportActionBar().hide();
+        cargarListenersAdapter();
         getFiles();
     }
 
@@ -44,6 +52,24 @@ public class ImageActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    private void cargarListenersAdapter() {
+        onClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showHideActionBar();
+            }
+        };
+
+        swipeListener = new SwipeListener(this) {
+
+            @Override
+            public void swipeDown() {
+                finish();
+                super.swipeDown();
+            }
+        };
+    }
+
     private void getFiles() {
         String folderPath = getIntent().getStringExtra("folder");
         Archivo folder = new Archivo(folderPath);
@@ -52,87 +78,72 @@ public class ImageActivity extends AppCompatActivity {
 
         imagenes = fileUtils.getImages(folder, this);
 
+        imagenes = fileUtils.getSortedFiles(imagenes);
+
         cargarVista();
     }
 
     private void cargarVista() {
-        img = findViewById(R.id.bigImageView);
-
         String chosenImgPath = getIntent().getStringExtra("img");
         Archivo chosenImg = new Archivo(chosenImgPath, this);
 
-        setTitle(chosenImg.getName());
+        int index = imagenes.indexOf(chosenImg);
+        Log.d("INDEX", String.valueOf(index));
 
-        img.setImageBitmap(chosenImg.getIcono());
+        viewPager = findViewById(R.id.viewPager);
 
-        index = imagenes.indexOf(chosenImg);
-
+        viewPager.setAdapter(new AdaptadorImagen(imagenes, this, onClickListener, swipeListener));
+        viewPager.setCurrentItem(index);
+        setTitle(imagenes.get(index).getName());
         cargarListeners();
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     private void cargarListeners() {
-        img.setOnClickListener(new View.OnClickListener() {
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
-            public void onClick(View v) {
-                showHideActionBar();
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                Archivo currentImage = imagenes.get(position);
+                setTitle(currentImage.getName());
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
             }
         });
 
-        img.setOnTouchListener(new SwipeListener(this) {
-            @Override
-            public void swipeDown() {
-                finish();
-                super.swipeDown();
-            }
-
-            @Override
-            public void swipeLeft() {
-                getPreviousImg();
-                super.swipeLeft();
-            }
-
-            @Override
-            public void swipeRight() {
-                getNextImage();
-                super.swipeRight();
-            }
-        });
-
-        runnable = new Runnable() {
+        showHideRunnable = new Runnable() {
             @Override
             public void run() {
                 showHideActionBar();
             }
         };
-    }
 
-    private void getPreviousImg() {
-        if (index > 0) {
-            index--;
-            Archivo archivo = imagenes.get(index);
-            img.setImageBitmap(archivo.getIcono());
-            setTitle(archivo.getName());
-        }
-    }
-
-    public void getNextImage() {
-        if (index < imagenes.size()) {
-            index++;
-            Archivo archivo = imagenes.get(index);
-            img.setImageBitmap(archivo.getIcono());
-            setTitle(archivo.getName());
-        }
+        enableRunnable = new Runnable() {
+            @Override
+            public void run() {
+                isEnable = true;
+            }
+        };
     }
 
     private void showHideActionBar() {
-        if (isShowed) {
-            getSupportActionBar().hide();
-            isShowed = false;
-        } else {
-            getSupportActionBar().show();
-            new Handler().postDelayed(runnable, 1500);
-            isShowed = true;
+        if (isEnable) {
+            if (isShowed) {
+                getSupportActionBar().hide();
+                isEnable = false;
+                isShowed = false;
+            } else {
+                getSupportActionBar().show();
+                new Handler().postDelayed(showHideRunnable, 1500);
+                isShowed = true;
+                isEnable = false;
+            }
+            new Handler().postDelayed(enableRunnable, 750);
         }
     }
 }
