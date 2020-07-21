@@ -4,11 +4,13 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager.widget.ViewPager;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 
 import com.rbp.filexplorer.modelo.AdaptadorImagen;
 import com.rbp.filexplorer.modelo.FileUtils;
@@ -41,6 +43,7 @@ public class ImageActivity extends AppCompatActivity {
         isShowed = false;
         isEnable = true;
         getSupportActionBar().hide();
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         cargarListenersAdapter();
         getFiles();
     }
@@ -61,7 +64,6 @@ public class ImageActivity extends AppCompatActivity {
         };
 
         swipeListener = new SwipeListener(this) {
-
             @Override
             public void swipeDown() {
                 finish();
@@ -95,6 +97,7 @@ public class ImageActivity extends AppCompatActivity {
         viewPager.setAdapter(new AdaptadorImagen(imagenes, this, onClickListener, swipeListener));
         viewPager.setCurrentItem(index);
         setTitle(imagenes.get(index).getName());
+
         cargarListeners();
     }
 
@@ -135,10 +138,12 @@ public class ImageActivity extends AppCompatActivity {
         if (isEnable) {
             if (isShowed) {
                 getSupportActionBar().hide();
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
                 isEnable = false;
                 isShowed = false;
             } else {
                 getSupportActionBar().show();
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
                 new Handler().postDelayed(showHideRunnable, 1500);
                 isShowed = true;
                 isEnable = false;

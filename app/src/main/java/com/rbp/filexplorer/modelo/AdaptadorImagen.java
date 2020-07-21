@@ -1,5 +1,6 @@
 package com.rbp.filexplorer.modelo;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.util.Log;
 import android.view.View;
@@ -10,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.viewpager.widget.PagerAdapter;
 
 import com.bumptech.glide.Glide;
+import com.github.chrisbanes.photoview.PhotoViewAttacher;
 import com.rbp.filexplorer.R;
 import com.rbp.filexplorer.modelo.entidad.Archivo;
 
@@ -32,14 +34,11 @@ public class AdaptadorImagen extends PagerAdapter {
         this.swipeListener = swipeListener;
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @NonNull
     @Override
     public Object instantiateItem(@NonNull ViewGroup container, int position) {
         View v = activity.getLayoutInflater().inflate(R.layout.imagen, null);
-
-        v.setOnClickListener(onClickListener);
-
-        v.setOnTouchListener(swipeListener);
 
         ImageView imageView = v.findViewById(R.id.imgGallery);
 
@@ -47,6 +46,11 @@ public class AdaptadorImagen extends PagerAdapter {
         Log.d("LOAD IMG", imagen.getName());
 
         Glide.with(activity).load(imagen).into(imageView);
+
+        PhotoViewAttacher photo = new PhotoViewAttacher(imageView);
+        photo.setZoomable(true);
+        photo.setOnClickListener(onClickListener);
+        photo.update();
 
         container.addView(v);
 
