@@ -39,4 +39,6 @@
     <string name="descImgMore">Icono de Más</string>
     <string name="descImgIcono">Icono del Archivo</string>
     <string name="descImgGrande">ImageView que muestra una foto del dispositivo</string>
+    <string name="descBackIcon">Icono de regresar</string>
+    <string name="descShareIcon">Icono de compartir</string>
 </resources>
