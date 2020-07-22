@@ -13,6 +13,7 @@ import com.rbp.filexplorer.modelo.entidad.Archivo;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
@@ -113,7 +114,7 @@ public class FileUtils {
     }
 
     /**
-     * Crea archivos a partir de su ruta.
+     * Crea una lista de archivos ordenados a partir de su ruta.
      *
      * @param path String[] con las rutas de los archivos
      * @return List de Archivo con los archivos creados a partir de su ruta
@@ -123,7 +124,7 @@ public class FileUtils {
         for (String estring : path) {
             archivos.add(new Archivo(estring));
         }
-        return archivos;
+        return getSortedFiles(archivos);
     }
 
     /**
@@ -167,11 +168,14 @@ public class FileUtils {
      */
     private void copyFile(Archivo source, Archivo folder) throws IOException {
         Archivo destination = new Archivo(folder.getAbsolutePath() + "/" + source.getName());
-        Log.d("COPY", destination.getAbsolutePath());
         if (!destination.getParentFile().exists())
             destination.getParentFile().mkdirs();
         if (!destination.exists())
             destination.createNewFile();
+        else
+            destination = getRepetidos(destination);
+
+        Log.d("COPY", destination.getAbsolutePath());
 
         FileChannel sourceChannel = null;
         FileChannel destinationChannel = null;
@@ -180,10 +184,8 @@ public class FileUtils {
         destinationChannel = new FileOutputStream(destination).getChannel();
         destinationChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
 
-        if (sourceChannel != null)
-            sourceChannel.close();
-        if (destinationChannel != null)
-            destinationChannel.close();
+        sourceChannel.close();
+        destinationChannel.close();
     }
 
     /**
@@ -194,18 +196,61 @@ public class FileUtils {
      */
     public void rename(File archivo, String newName) {
         String newPath = archivo.getParentFile().getAbsolutePath() + "/" + newName;
-        File newFile = new File(newPath);
+        Archivo newFile = new Archivo(newPath);
+        newFile = getRepetidos(newFile);
         Log.d("RENAME", newFile.getAbsolutePath());
         archivo.renameTo(newFile);
     }
 
     /**
-     * Crea una nueva carpeta
+     * Verifica si el archivo ya existe. Si existe, crea un duplpicado para no sobreescribir el original.
+     *
+     * @param file Archivo a verificar
+     * @return Si el archivo no existe, devuelve el archivo pasado por parámetro.
+     * Si ya existe devuelve el archivo con el nombre del duplicado
+     */
+    private Archivo getRepetidos(Archivo file) {
+        int numRepetidos = 0;
+        String extension = "";
+        boolean isFile = false;
+        while (file.exists()) {
+            numRepetidos++;
+            if (file.isFile()) {
+                extension = file.getExtension();
+                isFile = true;
+            }
+            file = new Archivo(file.getAbsolutePath().replace(extension, ""));
+            if (file.getName().endsWith("(" + numRepetidos + ")"))
+                file = new Archivo(file.getAbsolutePath().replace("(" + numRepetidos + ")", "(" + (numRepetidos + 1) + ")"));
+            else {
+                file = new Archivo(file.getAbsolutePath() + "(1)");
+                numRepetidos--;
+            }
+            if (isFile)
+                file = new Archivo(file.getAbsolutePath() + extension);
+        }
+        return file;
+    }
+
+    /**
+     * Crea una nueva carpeta. Si la carpeta existe añade un índice autogenerado
      *
      * @param folder carpeta a crear con la ruta nueva
      * @return true si se ha creado con éxito. false en caso contrario
      */
     public boolean createFolder(Archivo folder) {
+        int numExisten = 0;
+        while (folder.exists()) {
+            numExisten++;
+            Log.d("NUM EXISTEN", String.valueOf(numExisten));
+            if (folder.getName().contains("(" + numExisten + ")"))
+                folder = new Archivo(folder.getAbsolutePath().replace("(" + numExisten + ")", "(" + (numExisten + 1) + ")"));
+            else {
+                folder = new Archivo(folder.getAbsolutePath() + "(" + 1 + ")");
+                if (folder.exists())
+                    folder = new Archivo(folder.getAbsolutePath().replace("(" + numExisten + ")", "(" + (numExisten + 1) + ")"));
+            }
+        }
         Log.d("CREATE FOLDER", folder.getAbsolutePath());
         return folder.mkdir();
     }

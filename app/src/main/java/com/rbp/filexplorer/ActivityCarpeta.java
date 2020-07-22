@@ -16,6 +16,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -218,7 +219,7 @@ public class ActivityCarpeta extends AppCompatActivity implements AdaptadorCarpe
             recyvlerBuscar.setVisibility(View.GONE);
             recyvlerBuscar.setEnabled(false);
         } catch (NullPointerException e) {
-            e.printStackTrace();
+            Log.d("CLOSE SEARCHBAR", e.getMessage());
         }
         rv.setVisibility(View.VISIBLE);
         rv.setEnabled(true);

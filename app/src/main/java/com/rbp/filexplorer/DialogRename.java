@@ -2,9 +2,11 @@ package com.rbp.filexplorer;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.TextView;
@@ -32,10 +34,13 @@ public class DialogRename extends Dialog {
 
     private String newName;
 
+    private boolean firstClick;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.dialog_rename);
+        firstClick = true;
         cargarVista();
     }
 
@@ -54,6 +59,8 @@ public class DialogRename extends Dialog {
 
         this.txtRenameLayout = findViewById(R.id.txtLayoutRename);
         this.txtRename = findViewById(R.id.txtRename);
+        this.txtRename.setText(archivo.getName());
+        this.txtRename.requestFocus();
 
         String hint = "";
 
@@ -89,11 +96,22 @@ public class DialogRename extends Dialog {
                 activityCarpeta.clearModoSeleccion();
             }
         });
+
+        this.txtRename.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (firstClick)
+                    txtRename.selectAll();
+                firstClick = false;
+            }
+        });
     }
 
     private void procesarNombre() {
         this.newName = txtRename.getText().toString().trim();
-        if (this.newName.contains(".")) {
+        if (newName.equals(archivo.getName()))
+            dismiss();
+        else if (this.newName.contains(".")) {
             procesarExtension();
         } else
             rename();
@@ -103,9 +121,11 @@ public class DialogRename extends Dialog {
         Archivo file = new Archivo(this.newName);
         String extension = file.getExtension();
         String tipo = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.replace(".", ""));
-        if (tipo != null) {
+        if (tipo != null && extension.equals(this.archivo.getExtension()))
+            changeExtension();
+        else if (tipo != null)
             showExtensionAlert();
-        } else
+        else
             rename();
     }
 
@@ -134,7 +154,9 @@ public class DialogRename extends Dialog {
     }
 
     private void rename() {
-        String extension = this.archivo.getExtension();
+        String extension = "";
+        if (this.archivo.isFile())
+            extension = this.archivo.getExtension();
         this.fileUtils.rename(this.archivo, this.newName + extension);
         dismiss();
     }
