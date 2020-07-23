@@ -239,18 +239,7 @@ public class FileUtils {
      * @return true si se ha creado con éxito. false en caso contrario
      */
     public boolean createFolder(Archivo folder) {
-        int numExisten = 0;
-        while (folder.exists()) {
-            numExisten++;
-            Log.d("NUM EXISTEN", String.valueOf(numExisten));
-            if (folder.getName().contains("(" + numExisten + ")"))
-                folder = new Archivo(folder.getAbsolutePath().replace("(" + numExisten + ")", "(" + (numExisten + 1) + ")"));
-            else {
-                folder = new Archivo(folder.getAbsolutePath() + "(" + 1 + ")");
-                if (folder.exists())
-                    folder = new Archivo(folder.getAbsolutePath().replace("(" + numExisten + ")", "(" + (numExisten + 1) + ")"));
-            }
-        }
+        folder = getRepetidos(folder);
         Log.d("CREATE FOLDER", folder.getAbsolutePath());
         return folder.mkdir();
     }
