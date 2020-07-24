@@ -12,8 +12,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ActivityPermisos"></activity>
-        <activity android:name=".ImageActivity" />
+        <activity android:name=".ActivityPermisos" />
+        <activity
+            android:name=".ImageActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity android:name=".ActivityCopyMove" />
         <activity
             android:name=".ActivityCarpeta"
