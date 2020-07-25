@@ -156,16 +156,23 @@ public class ActivityCarpeta extends AppCompatActivity implements AdaptadorCarpe
 
     @Override
     public void longClick(int position) {
-        modoSeleccion = true;
-        if (modoBuscar)
-            seleccionarArchivo(archivosBuscados.get(position));
-        else
-            seleccionarArchivo(this.archivos.get(position));
-        this.snackbarMenu = new SnackbarMenu(findViewById(android.R.id.content), this.archivosSeleccionados, this);
-        this.snackbar = this.snackbarMenu.getSnackbar();
-        this.snackbar.show();
-        this.snackbarMenu.updateMenu();
-        pushUpRecyclerView(position == this.archivos.size() - 1);
+        if (modoSeleccion)
+            if (modoBuscar)
+                seleccionarArchivo(archivosBuscados.get(position));
+            else
+                seleccionarArchivo(archivos.get(position));
+        else {
+            modoSeleccion = true;
+            if (modoBuscar)
+                seleccionarArchivo(archivosBuscados.get(position));
+            else
+                seleccionarArchivo(this.archivos.get(position));
+            this.snackbarMenu = new SnackbarMenu(findViewById(android.R.id.content), this.archivosSeleccionados, this);
+            this.snackbar = this.snackbarMenu.getSnackbar();
+            this.snackbar.show();
+            this.snackbarMenu.updateMenu();
+            pushUpRecyclerView(position == this.archivos.size() - 1);
+        }
     }
 
     @Override

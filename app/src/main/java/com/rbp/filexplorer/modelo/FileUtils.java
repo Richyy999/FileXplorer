@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Parcelable;
 import android.util.Log;
 
 import androidx.core.content.FileProvider;
@@ -96,6 +97,23 @@ public class FileUtils {
         intent.setDataAndType(uri, mime);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         activity.startActivity(intent);
+    }
+
+    public void sendFiles(List<Archivo> files, Activity activity) {
+        ArrayList<Uri> uris = new ArrayList<>();
+        for (Archivo archivo : files) {
+            uris.add(FileProvider.getUriForFile(activity.getApplicationContext(), activity.getPackageName() + ".provider", archivo));
+        }
+
+        Intent share = new Intent();
+        share.setAction(Intent.ACTION_GET_CONTENT);
+        share.setPackage(activity.getPackageName());
+        share.setType("image/jpg");
+        share.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        share.putExtra(Intent.EXTRA_STREAM, uris);
+        share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        activity.startActivity(Intent.createChooser(share, "Enviar..."));
     }
 
     /**
