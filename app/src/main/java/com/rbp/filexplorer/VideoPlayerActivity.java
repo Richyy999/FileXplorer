@@ -3,7 +3,6 @@ package com.rbp.filexplorer;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
-import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -12,7 +11,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
-import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -39,30 +37,21 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.FileDataSource;
 import com.rbp.filexplorer.modelo.DoubleClickListener;
 import com.rbp.filexplorer.modelo.FileUtils;
-import com.rbp.filexplorer.modelo.SwipeListener;
 import com.rbp.filexplorer.modelo.entidad.Archivo;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 public class VideoPlayerActivity extends AppCompatActivity {
 
     private static final int DURATION = 200;
 
-    private FileUtils fileUtils;
-
     private List<Archivo> videos;
 
-    private PlayerView playerView;
-
-    private AlphaAnimation showToolbar;
-    private AlphaAnimation hideToolbar;
-    private AlphaAnimation showSeekbar;
-    private AlphaAnimation hideSeekbar;
-
-    private AlphaAnimation showButtons;
-    private AlphaAnimation hideButtons;
+    private AlphaAnimation show;
+    private AlphaAnimation hide;
 
     private ConstraintLayout toolbar;
     private ConstraintLayout seekBarLayout;
@@ -85,7 +74,6 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
     private Runnable seekbarRunnable;
     private Runnable hideElements;
-    private Runnable hideAnimation;
 
     private Handler handler;
 
@@ -93,6 +81,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
     private boolean isPlaying;
     private boolean isShowed;
+    private boolean wasPlaying;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,19 +94,22 @@ public class VideoPlayerActivity extends AppCompatActivity {
         getFiles();
         initPlayer();
         cargarListeners(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
+        wasPlaying = true;
     }
 
     @Override
     protected void onResume() {
         if (simpleExoPlayer != null)
-            simpleExoPlayer.setPlayWhenReady(true);
+            simpleExoPlayer.setPlayWhenReady(wasPlaying);
         super.onResume();
     }
 
     @Override
     protected void onStop() {
-        if (simpleExoPlayer != null)
+        if (simpleExoPlayer != null) {
+            wasPlaying = simpleExoPlayer.getPlayWhenReady();
             simpleExoPlayer.setPlayWhenReady(false);
+        }
         super.onStop();
     }
 
@@ -129,24 +121,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
     }
 
     private void loadAnimations() {
+        show = new AlphaAnimation(0, 1);
+        show.setDuration(DURATION);
 
-        showToolbar = new AlphaAnimation(0, 1);
-        showToolbar.setDuration(DURATION);
-
-        hideToolbar = new AlphaAnimation(1, 0);
-        hideToolbar.setDuration(DURATION);
-
-        showSeekbar = new AlphaAnimation(0, 1);
-        showSeekbar.setDuration(DURATION);
-
-        hideSeekbar = new AlphaAnimation(1, 0);
-        hideSeekbar.setDuration(DURATION);
-
-        showButtons = new AlphaAnimation(0, 1);
-        showButtons.setDuration(DURATION);
-
-        hideButtons = new AlphaAnimation(1, 0);
-        hideButtons.setDuration(DURATION);
+        hide = new AlphaAnimation(1, 0);
+        hide.setDuration(DURATION);
 
         isShowed = true;
 
@@ -159,35 +138,27 @@ public class VideoPlayerActivity extends AppCompatActivity {
             }
         };
 
-        hideAnimation = new Runnable() {
-            @Override
-            public void run() {
-                if (isShowed)
-                    showHideDisplay();
-            }
-        };
-
         showHideDisplay();
     }
 
     private void showHideDisplay() {
         if (isShowed) {
             isShowed = false;
-            toolbar.startAnimation(hideToolbar);
-            seekBarLayout.startAnimation(hideSeekbar);
-            playPauseLayout.startAnimation(hideButtons);
+            toolbar.startAnimation(hide);
+            seekBarLayout.startAnimation(hide);
+            playPauseLayout.startAnimation(hide);
             handler.postDelayed(hideElements, DURATION);
         } else {
             isShowed = true;
 
             toolbar.setVisibility(View.VISIBLE);
-            toolbar.startAnimation(showToolbar);
+            toolbar.startAnimation(show);
 
             seekBarLayout.setVisibility(View.VISIBLE);
-            seekBarLayout.startAnimation(showSeekbar);
+            seekBarLayout.startAnimation(show);
 
             playPauseLayout.setVisibility(View.VISIBLE);
-            playPauseLayout.startAnimation(showButtons);
+            playPauseLayout.startAnimation(show);
         }
     }
 
@@ -375,7 +346,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
     }
 
     private void playPrevious() {
-        if (simpleExoPlayer.getCurrentPosition() >= simpleExoPlayer.getDuration() * 0.2)
+        if (simpleExoPlayer.getCurrentPosition() >= simpleExoPlayer.getDuration() * 0.05)
             simpleExoPlayer.seekTo(0);
         else if (index > 0) {
             index--;
@@ -386,11 +357,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
     }
 
     private void updateButtons() {
-        if (index == 0) {
-            btnPrevious.setVisibility(View.GONE);
+        if (index == 0 && simpleExoPlayer.getCurrentPosition() < simpleExoPlayer.getDuration() * 0.05) {
+            btnPrevious.setVisibility(View.INVISIBLE);
             btnNext.setVisibility(View.VISIBLE);
         } else if (index == videos.size() - 1) {
-            btnNext.setVisibility(View.GONE);
+            btnNext.setVisibility(View.INVISIBLE);
             btnPrevious.setVisibility(View.VISIBLE);
         } else {
             btnNext.setVisibility(View.VISIBLE);
@@ -399,7 +370,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
     }
 
     private void initPlayer() {
-        playerView = findViewById(R.id.player);
+        PlayerView playerView = findViewById(R.id.player);
 
         BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
         TrackSelection.Factory factory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
@@ -420,6 +391,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
         long currentTime = simpleExoPlayer.getCurrentPosition();
         seekBar.setProgress((int) currentTime);
         lblCurrentTime.setText(getCurrentTime(currentTime));
+        updateButtons();
         if (simpleExoPlayer.getPlayWhenReady())
             handler.postDelayed(seekbarRunnable, 100);
     }
@@ -437,13 +409,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
         String minute = String.valueOf(cal.get(Calendar.MINUTE));
         String second = String.valueOf(cal.get(Calendar.SECOND));
 
-        while (minute.length() < 2) {
+        if (minute.length() < 2)
             minute = "0" + minute;
-        }
 
-        while (second.length() < 2) {
+        if (second.length() < 2)
             second = "0" + second;
-        }
 
         if (hour > 0)
             result = hour + ":" + minute + ":" + second;
@@ -458,7 +428,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
         String chosenFilePath = getIntent().getStringExtra("chosenFile");
         Archivo chosenFile = new Archivo(chosenFilePath);
 
-        fileUtils = new FileUtils();
+        FileUtils fileUtils = new FileUtils();
 
         videos = fileUtils.getSortedFiles(fileUtils.getVideos(new Archivo(folderPath), this));
         index = videos.indexOf(chosenFile);
@@ -470,7 +440,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
         try {
             dataSource.open(dataSpec);
         } catch (FileDataSource.FileDataSourceException e) {
-            Log.w("LOAD VIDEO", e.getMessage());
+            Log.w("LOAD VIDEO", Objects.requireNonNull(e.getMessage()));
         }
 
         DataSource.Factory factory = new DataSource.Factory() {
