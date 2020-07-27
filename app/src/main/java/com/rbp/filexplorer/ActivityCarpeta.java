@@ -195,7 +195,13 @@ public class ActivityCarpeta extends AppCompatActivity implements AdaptadorCarpe
                     intent.putExtra("img", archivo.getAbsolutePath());
                     intent.putExtra("folder", carpeta.getAbsolutePath());
                     startActivity(intent);
+                } else if (tipo.contains("video")) {
+                    Intent intent = new Intent(this, VideoPlayerActivity.class);
+                    intent.putExtra("folder", carpeta.getAbsolutePath());
+                    intent.putExtra("chosenFile", archivo.getAbsolutePath());
+                    startActivity(intent);
                 } else
+
                     this.fileUtils.openFile(archivo, this);
                 new Handler().postDelayed(new Runnable() {
                     @Override

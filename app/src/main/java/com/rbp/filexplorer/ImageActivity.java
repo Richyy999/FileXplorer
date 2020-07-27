@@ -43,8 +43,6 @@ public class ImageActivity extends AppCompatActivity {
 
     private ImageView btnBack;
 
-    private ImageView btnShare;
-
     private List<Archivo> imagenes;
 
     private boolean isShowed;
@@ -114,8 +112,6 @@ public class ImageActivity extends AppCompatActivity {
 
         btnBack = findViewById(R.id.imgBackGalery);
 
-        btnShare = findViewById(R.id.imgShareGalery);
-
         int index = imagenes.indexOf(chosenImg);
         Log.d("INDEX", String.valueOf(index));
 
@@ -165,13 +161,6 @@ public class ImageActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 finish();
-            }
-        });
-
-        btnShare.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //TODO implementar función compartir
             }
         });
     }

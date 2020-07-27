@@ -41,5 +41,7 @@
     <string name="descImgGrande">ImageView que muestra una foto del dispositivo</string>
     <string name="descBackIcon">Icono de regresar</string>
     <string name="descShareIcon">Icono de compartir</string>
+    <string name="descNextButton">Icono de siguiente</string>
+    <string name="descPreviousButton">Icono de anterior</string>
     <string name="share">Compartir</string>
 </resources>

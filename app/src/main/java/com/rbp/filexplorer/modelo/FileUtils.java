@@ -9,6 +9,7 @@ import android.util.Log;
 
 import androidx.core.content.FileProvider;
 
+import com.rbp.filexplorer.VideoPlayerActivity;
 import com.rbp.filexplorer.modelo.entidad.Archivo;
 
 import java.io.File;
@@ -303,5 +304,26 @@ public class FileUtils {
                 images.add(archivo);
         }
         return images;
+    }
+
+    /**
+     * Devuelve una lista con todos los videos que contiene la carpeta
+     *
+     * @param folder  carpeta contenedora
+     * @param context contexto de la aplicación
+     * @return List de Archivo con todos los videos de la carpeta
+     */
+    public List<Archivo> getVideos(Archivo folder, Context context) {
+        List<Archivo> videos = new ArrayList<>();
+        List<Archivo> archivos = new ArrayList<>();
+        File[] files = folder.listFiles();
+        for (File file : files) {
+            archivos.add(new Archivo(file.getAbsolutePath()));
+        }
+        for (Archivo archivo : archivos) {
+            if (archivo.getTipo().contains("video"))
+                videos.add(archivo);
+        }
+        return videos;
     }
 }

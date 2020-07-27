@@ -26,6 +26,12 @@ public class SwipeListener implements View.OnTouchListener {
         private static final int SWIPE_VELOCITY_THRESHOLD = 100;
 
         @Override
+        public boolean onDoubleTap(MotionEvent e) {
+
+            return super.onDoubleTap(e);
+        }
+
+        @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
             boolean result = false;
             try {
@@ -68,5 +74,9 @@ public class SwipeListener implements View.OnTouchListener {
 
     public void swipeRight() {
         Log.d("SWIPE", "RIGHT");
+    }
+
+    public void onDoubleClick() {
+        Log.d("DOUBLE TAP", "YES");
     }
 }

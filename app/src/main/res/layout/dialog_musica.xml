@@ -14,12 +14,9 @@
 
     <SeekBar
         android:id="@+id/seekBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        style="@style/seekbar"
         android:progressTint="@color/colorPrimaryDark"
         android:splitTrack="false"
-        android:thumb="@drawable/seek_thumb"
         tools:targetApi="lollipop" />
 
     <LinearLayout
