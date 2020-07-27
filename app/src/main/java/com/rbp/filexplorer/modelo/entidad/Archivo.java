@@ -50,9 +50,7 @@ public class Archivo extends File {
         Bitmap icono = null;
         Drawable d = null;
         String tipo = getTipo().toLowerCase();
-        if (tipo.contains("video"))
-            d = this.context.getResources().getDrawable(R.drawable.video);
-        else if (tipo.contains("audio"))
+        if (tipo.contains("audio"))
             d = this.context.getResources().getDrawable(R.drawable.musica);
         else if (tipo.contains("android"))
             d = this.context.getResources().getDrawable(R.drawable.apk);
