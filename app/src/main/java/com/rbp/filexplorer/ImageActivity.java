@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.viewpager.widget.ViewPager;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -55,6 +56,9 @@ public class ImageActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
+        }
         isShowed = false;
         isEnable = true;
         toolbar = findViewById(R.id.toolbarImagen);
@@ -106,6 +110,7 @@ public class ImageActivity extends AppCompatActivity {
 
     private void cargarVista() {
         String chosenImgPath = getIntent().getStringExtra("img");
+        assert chosenImgPath != null;
         Archivo chosenImg = new Archivo(chosenImgPath, this);
 
         lblTitle = findViewById(R.id.titleImage);

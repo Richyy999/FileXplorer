@@ -64,7 +64,7 @@
             style="@style/seekbar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:progressTint="@color/white"
+            android:progressTint="@color/colorPrimaryDark"
             android:splitTrack="false"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/lblDuration"
