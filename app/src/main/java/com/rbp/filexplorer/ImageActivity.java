@@ -28,8 +28,6 @@ public class ImageActivity extends AppCompatActivity {
 
     private View.OnClickListener onClickListener;
 
-    private SwipeListener swipeListener;
-
     private Runnable showHideRunnable;
     private Runnable enableRunnable;
 
@@ -85,14 +83,6 @@ public class ImageActivity extends AppCompatActivity {
                 showHideActionBar();
             }
         };
-
-        swipeListener = new SwipeListener(this) {
-            @Override
-            public void swipeDown() {
-                finish();
-                super.swipeDown();
-            }
-        };
     }
 
     private void getFiles() {
@@ -122,7 +112,7 @@ public class ImageActivity extends AppCompatActivity {
 
         viewPager = findViewById(R.id.viewPager);
 
-        viewPager.setAdapter(new AdaptadorImagen(imagenes, this, onClickListener, swipeListener));
+        viewPager.setAdapter(new AdaptadorImagen(imagenes, this, onClickListener));
         viewPager.setCurrentItem(index);
 
         lblTitle.setText(imagenes.get(index).getName());

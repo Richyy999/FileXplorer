@@ -1,82 +1,114 @@
 package com.rbp.filexplorer.modelo;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.util.Log;
-import android.view.GestureDetector;
+import android.os.SystemClock;
 import android.view.MotionEvent;
 import android.view.View;
 
-public class SwipeListener implements View.OnTouchListener {
+public abstract class SwipeListener implements View.OnTouchListener {
 
-    private final GestureDetector gestureDetector;
+    private static final int SWIPE_THRESHOLD = 100;
 
-    public SwipeListener(Context context) {
-        this.gestureDetector = new GestureDetector(context, new GesticureListener());
+    private static final long DEFAULT_QUALIFICATION_SPAN = 200;
+
+    private float startY;
+    private float startX;
+
+    private long doubleClickQualificationSpanInMillis;
+    private long timestampLastClick;
+
+
+    private boolean hasSwiped;
+
+    public SwipeListener() {
+        doubleClickQualificationSpanInMillis = DEFAULT_QUALIFICATION_SPAN;
+        timestampLastClick = 0;
     }
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        return gestureDetector.onTouchEvent(event);
-    }
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                startX = event.getX();
+                startY = event.getY();
+                break;
+            case MotionEvent.ACTION_MOVE:
+                float currentX = event.getX();
+                float currentY = event.getY();
 
-    private final class GesticureListener extends GestureDetector.SimpleOnGestureListener {
-
-        private static final int SWIPE_THRESHOLD = 100;
-        private static final int SWIPE_VELOCITY_THRESHOLD = 100;
-
-        @Override
-        public boolean onDoubleTap(MotionEvent e) {
-
-            return super.onDoubleTap(e);
-        }
-
-        @Override
-        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            boolean result = false;
-            try {
-                float diffX = e1.getX() - e2.getX();
-                float diffY = e1.getY() - e2.getY();
+                float diffX = startX - currentX;
+                float diffY = startY - currentY;
 
                 if (Math.abs(diffX) > Math.abs(diffY)) {
-                    if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                    hasSwiped = true;
+                    if (Math.abs(diffX) > SWIPE_THRESHOLD)
                         if (diffX > 0)
-                            swipeLeft();
+                            swipeLeft(startX, currentX);
                         else
-                            swipeRight();
-                        result = true;
-                    }
-                } else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                            swipeRight(startX, currentX);
+                } else if (Math.abs(diffY) > SWIPE_THRESHOLD) {
+                    hasSwiped = true;
                     if (diffY > 0)
-                        swipeUp();
+                        swipeUp(startY, currentY);
                     else
-                        swipeDown();
-                    result = true;
+                        swipeDown(startY, currentY);
                 }
-            } catch (Exception e) {
-                Log.w("SWIPE LISTENER", e.toString());
-            }
-            return result;
+                break;
+            case MotionEvent.ACTION_UP:
+                if (!hasSwiped) {
+                    if ((SystemClock.elapsedRealtime() - timestampLastClick) < doubleClickQualificationSpanInMillis) {
+                        onDoubleClick();
+                    } else {
+                        onClick();
+                    }
+                    timestampLastClick = SystemClock.elapsedRealtime();
+                }
+
+                hasSwiped = false;
+
+                break;
         }
+        return true;
     }
 
-    public void swipeUp() {
-        Log.d("SWIPE", "UP");
-    }
+    /**
+     * Método que se ejecuta al hacer doble click
+     */
+    public abstract void onDoubleClick();
 
-    public void swipeDown() {
-        Log.d("SWIPE", "DOWN");
-    }
+    /**
+     * Método que se ejecuta al hacer click
+     */
+    public abstract void onClick();
 
-    public void swipeLeft() {
-        Log.d("SWIPE", "LEFT");
-    }
+    /**
+     * Método que se ejecuta al deslizar el dedo hacia arriba
+     *
+     * @param startY coordenada X inicial
+     * @param y      coordenada X actual
+     */
+    public abstract void swipeUp(float startY, float y);
 
-    public void swipeRight() {
-        Log.d("SWIPE", "RIGHT");
-    }
+    /**
+     * Método que se ejecuta al deslizar el dedo hacia abajo
+     *
+     * @param startY coordenada X inicial
+     * @param y      coordenada X actual
+     */
+    public abstract void swipeDown(float startY, float y);
 
-    public void onDoubleClick() {
-        Log.d("DOUBLE TAP", "YES");
-    }
+    /**
+     * Método que se ejecuta cuando se desliza el dedo hacia la izquierda
+     *
+     * @param startX coordenada Y inicial
+     * @param x      coordenada Y actual
+     */
+    public abstract void swipeLeft(float startX, float x);
+
+    /**
+     * Método que se ejecuta cuando se desliza el dedo hacia la derecha
+     *
+     * @param startX coordenada Y inicial
+     * @param x      coordenada Y actual
+     */
+    public abstract void swipeRight(float startX, float x);
 }
