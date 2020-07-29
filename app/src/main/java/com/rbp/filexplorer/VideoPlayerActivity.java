@@ -35,8 +35,8 @@ import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DataSpec;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.FileDataSource;
-import com.rbp.filexplorer.modelo.DoubleClickListener;
 import com.rbp.filexplorer.modelo.FileUtils;
+import com.rbp.filexplorer.modelo.SwipeListener;
 import com.rbp.filexplorer.modelo.entidad.Archivo;
 
 import java.util.Calendar;
@@ -74,6 +74,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
     private Runnable seekbarRunnable;
     private Runnable hideElements;
+    private Runnable showHideElements;
 
     private Handler handler;
 
@@ -135,6 +136,15 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 toolbar.setVisibility(View.GONE);
                 seekBarLayout.setVisibility(View.GONE);
                 playPauseLayout.setVisibility(View.GONE);
+                isShowed = false;
+            }
+        };
+
+        showHideElements = new Runnable() {
+            @Override
+            public void run() {
+                if (isShowed)
+                    showHideDisplay();
             }
         };
 
@@ -143,7 +153,6 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
     private void showHideDisplay() {
         if (isShowed) {
-            isShowed = false;
             toolbar.startAnimation(hide);
             seekBarLayout.startAnimation(hide);
             playPauseLayout.startAnimation(hide);
@@ -160,6 +169,13 @@ public class VideoPlayerActivity extends AppCompatActivity {
             playPauseLayout.setVisibility(View.VISIBLE);
             playPauseLayout.startAnimation(show);
         }
+
+        resetShowHideRunnable();
+    }
+
+    private void resetShowHideRunnable() {
+        handler.removeCallbacks(showHideElements);
+        handler.postDelayed(showHideElements, 5000);
     }
 
     private void cargarVistaSeekbar() {
@@ -264,10 +280,33 @@ public class VideoPlayerActivity extends AppCompatActivity {
         });
 
         if (sdk) {
-            clickableView.setOnClickListener(new DoubleClickListener() {
+            clickableView.setOnTouchListener(new SwipeListener() {
+                @Override
+                public void swipeUp(float startY, float y) {
+                    Log.d("CURRENT Y", String.valueOf(y));
+                }
+
+                @Override
+                public void swipeDown(float startY, float y) {
+                    Log.d("CURRENT Y", String.valueOf(y));
+                }
+
+                @Override
+                public void swipeLeft(float startX, float x) {
+                    float diferencia = startX - x;
+                    retroceder(Math.abs(diferencia));
+                }
+
+                @Override
+                public void swipeRight(float startX, float x) {
+                    float diferencia = startX - x;
+                    avanzar(Math.abs(diferencia));
+                }
+
                 @Override
                 public void onDoubleClick() {
                     reproducir();
+                    resetShowHideRunnable();
                 }
 
                 @Override
@@ -279,6 +318,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
             btnPrevious.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    resetShowHideRunnable();
                     playPrevious();
                 }
             });
@@ -286,6 +326,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
             btnNext.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    resetShowHideRunnable();
                     playNext();
                 }
             });
@@ -294,6 +335,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     reproducir();
+                    resetShowHideRunnable();
                 }
             });
 
@@ -307,6 +349,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
             seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    resetShowHideRunnable();
                     if (fromUser)
                         simpleExoPlayer.seekTo(progress);
                 }
@@ -321,6 +364,32 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
                 }
             });
+        }
+    }
+
+    private void retroceder(float diferencia) {
+        int porcentaje = (int) (diferencia * 0.01);
+
+        int porcentajeAvanzar = (int) (simpleExoPlayer.getDuration() * porcentaje);
+
+        long avance = simpleExoPlayer.getCurrentPosition() - (porcentajeAvanzar / 1000);
+
+        if (avance > 0) {
+            updateSeekbar();
+            simpleExoPlayer.seekTo(avance);
+        }
+    }
+
+    private void avanzar(float diferencia) {
+        int porcentaje = (int) (diferencia * 0.01);
+
+        int porcentajeAvanzar = (int) (simpleExoPlayer.getDuration() * porcentaje);
+
+        long avance = simpleExoPlayer.getCurrentPosition() + (porcentajeAvanzar / 1000);
+
+        if (avance < simpleExoPlayer.getDuration()) {
+            simpleExoPlayer.seekTo(avance);
+            updateSeekbar();
         }
     }
 

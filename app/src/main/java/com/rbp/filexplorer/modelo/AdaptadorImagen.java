@@ -21,17 +21,14 @@ public class AdaptadorImagen extends PagerAdapter {
 
     private View.OnClickListener onClickListener;
 
-    private SwipeListener swipeListener;
-
     private List<Archivo> imagenes;
 
     private Activity activity;
 
-    public AdaptadorImagen(List<Archivo> imagenes, Activity activity, View.OnClickListener onClickListener, SwipeListener swipeListener) {
+    public AdaptadorImagen(List<Archivo> imagenes, Activity activity, View.OnClickListener onClickListener) {
         this.imagenes = imagenes;
         this.activity = activity;
         this.onClickListener = onClickListener;
-        this.swipeListener = swipeListener;
     }
 
     @SuppressLint("ClickableViewAccessibility")
