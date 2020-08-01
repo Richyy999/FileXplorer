@@ -42,15 +42,15 @@ public abstract class SwipeListener implements View.OnTouchListener {
                     hasSwiped = true;
                     if (Math.abs(diffX) > SWIPE_THRESHOLD)
                         if (diffX > 0)
-                            swipeLeft(startX, currentX);
+                            swipeLeft(startX, currentX, startY, currentY);
                         else
-                            swipeRight(startX, currentX);
+                            swipeRight(startX, currentX, startY, currentY);
                 } else if (Math.abs(diffY) > SWIPE_THRESHOLD) {
                     hasSwiped = true;
                     if (diffY > 0)
-                        swipeUp(startY, currentY);
+                        swipeUp(startY, currentY, startX, currentX);
                     else
-                        swipeDown(startY, currentY);
+                        swipeDown(startY, currentY, startX, currentX);
                 }
                 break;
             case MotionEvent.ACTION_UP:
@@ -61,7 +61,8 @@ public abstract class SwipeListener implements View.OnTouchListener {
                         onClick();
                     }
                     timestampLastClick = SystemClock.elapsedRealtime();
-                }
+                } else
+                    onActionUp();
 
                 hasSwiped = false;
 
@@ -69,6 +70,12 @@ public abstract class SwipeListener implements View.OnTouchListener {
         }
         return true;
     }
+
+
+    /**
+     * Método que se ejecuta cuando el usuario levanta el dedo de la pantalla;
+     */
+    public abstract void onActionUp();
 
     /**
      * Método que se ejecuta al hacer doble click
@@ -83,32 +90,40 @@ public abstract class SwipeListener implements View.OnTouchListener {
     /**
      * Método que se ejecuta al deslizar el dedo hacia arriba
      *
-     * @param startY coordenada X inicial
-     * @param y      coordenada X actual
+     * @param startY coordenada Y inicial
+     * @param y      coordenada Y actual
+     * @param startX coordenada X inicial
+     * @param x      coordenada X actual
      */
-    public abstract void swipeUp(float startY, float y);
+    public abstract void swipeUp(float startY, float y, float startX, float x);
 
     /**
      * Método que se ejecuta al deslizar el dedo hacia abajo
      *
-     * @param startY coordenada X inicial
-     * @param y      coordenada X actual
+     * @param startY coordenada Y inicial
+     * @param y      coordenada Y actual
+     * @param startX coordenada X inicial
+     * @param x      coordenada X actual
      */
-    public abstract void swipeDown(float startY, float y);
+    public abstract void swipeDown(float startY, float y, float startX, float x);
 
     /**
      * Método que se ejecuta cuando se desliza el dedo hacia la izquierda
      *
-     * @param startX coordenada Y inicial
-     * @param x      coordenada Y actual
+     * @param startX coordenada X inicial
+     * @param x      coordenada X actual
+     * @param startY coordenada Y inicial
+     * @param y      coordenada Y actual
      */
-    public abstract void swipeLeft(float startX, float x);
+    public abstract void swipeLeft(float startX, float x, float startY, float y);
 
     /**
      * Método que se ejecuta cuando se desliza el dedo hacia la derecha
      *
-     * @param startX coordenada Y inicial
-     * @param x      coordenada Y actual
+     * @param startX coordenada X inicial
+     * @param x      coordenada X actual
+     * @param startY coordenada Y inicial
+     * @param y      coordenada Y actual
      */
-    public abstract void swipeRight(float startX, float x);
+    public abstract void swipeRight(float startX, float x, float startY, float y);
 }

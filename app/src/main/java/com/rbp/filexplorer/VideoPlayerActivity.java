@@ -56,6 +56,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private ConstraintLayout toolbar;
     private ConstraintLayout seekBarLayout;
     private ConstraintLayout playPauseLayout;
+    private ConstraintLayout seekBarInfoLayout;
 
     private ImageView btnBack;
     private ImageView btnPlayPause;
@@ -63,10 +64,12 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private ImageView btnNext;
 
     private SeekBar seekBar;
+    private SeekBar seekBarInfo;
 
     private TextView lblTitle;
     private TextView lblCurrentTime;
     private TextView lblDuration;
+    private TextView lblCurrentTimeInfo;
 
     private View clickableView;
 
@@ -186,8 +189,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbarVideo);
         seekBarLayout = findViewById(R.id.videoSeekbarLayout);
         playPauseLayout = findViewById(R.id.playButtonLayout);
+        seekBarInfoLayout = findViewById(R.id.seekbarInfoVideoLayout);
 
         seekBar = findViewById(R.id.seekBarVideo);
+        seekBarInfo = findViewById(R.id.seekBarInfoVideo);
+        seekBarInfo.getThumb().mutate().setAlpha(0);
 
         btnBack = findViewById(R.id.imgBackVideo);
         btnNext = findViewById(R.id.imgNext);
@@ -197,6 +203,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
         lblCurrentTime = findViewById(R.id.lblCurrentTime);
         lblDuration = findViewById(R.id.lblDuration);
         lblTitle = findViewById(R.id.titleVideo);
+        lblCurrentTimeInfo = findViewById(R.id.lblCurrentTimeInfo);
 
         handler = new Handler();
 
@@ -208,6 +215,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
         };
 
         loadAnimations();
+        hideSwipeInfo();
     }
 
     private void cargarListeners(boolean sdk) {
@@ -236,6 +244,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
                             long currentTime = simpleExoPlayer.getDuration();
                             lblDuration.setText(getCurrentTime(currentTime));
                             seekBar.setMax((int) currentTime);
+                            seekBarInfo.setMax((int) currentTime);
                             btnPlayPause.setImageResource(R.drawable.pause_white);
                             updateButtons();
                             updateSeekbar();
@@ -282,23 +291,23 @@ public class VideoPlayerActivity extends AppCompatActivity {
         if (sdk) {
             clickableView.setOnTouchListener(new SwipeListener() {
                 @Override
-                public void swipeUp(float startY, float y) {
+                public void swipeUp(float startY, float y, float startX, float x) {
                     Log.d("CURRENT Y", String.valueOf(y));
                 }
 
                 @Override
-                public void swipeDown(float startY, float y) {
+                public void swipeDown(float startY, float y, float startX, float x) {
                     Log.d("CURRENT Y", String.valueOf(y));
                 }
 
                 @Override
-                public void swipeLeft(float startX, float x) {
+                public void swipeLeft(float startX, float x, float startY, float y) {
                     float diferencia = startX - x;
                     retroceder(Math.abs(diferencia));
                 }
 
                 @Override
-                public void swipeRight(float startX, float x) {
+                public void swipeRight(float startX, float x, float startY, float y) {
                     float diferencia = startX - x;
                     avanzar(Math.abs(diferencia));
                 }
@@ -312,6 +321,13 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 @Override
                 public void onClick() {
                     showHideDisplay();
+                }
+
+                @Override
+                public void onActionUp() {
+                    hideSwipeInfo();
+                    if (!simpleExoPlayer.getPlayWhenReady())
+                        reproducir();
                 }
             });
 
@@ -367,16 +383,29 @@ public class VideoPlayerActivity extends AppCompatActivity {
         }
     }
 
+    private void hideSwipeInfo() {
+        seekBarInfoLayout.setVisibility(View.GONE);
+    }
+
+    private void updateSwipeCurrentTime() {
+        if (isShowed)
+            showHideDisplay();
+        seekBarInfoLayout.setVisibility(View.VISIBLE);
+        seekBarInfo.setProgress((int) simpleExoPlayer.getCurrentPosition());
+        lblCurrentTimeInfo.setText(getCurrentTime(simpleExoPlayer.getCurrentPosition()) + "/" + getCurrentTime(simpleExoPlayer.getDuration()));
+    }
+
     private void retroceder(float diferencia) {
         int porcentaje = (int) (diferencia * 0.01);
 
         int porcentajeAvanzar = (int) (simpleExoPlayer.getDuration() * porcentaje);
 
-        long avance = simpleExoPlayer.getCurrentPosition() - (porcentajeAvanzar / 1000);
+        long incremento = simpleExoPlayer.getCurrentPosition() - (porcentajeAvanzar / 1000);
 
-        if (avance > 0) {
+        if (incremento > 0) {
             updateSeekbar();
-            simpleExoPlayer.seekTo(avance);
+            simpleExoPlayer.seekTo(incremento);
+            updateSwipeCurrentTime();
         }
     }
 
@@ -385,11 +414,12 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
         int porcentajeAvanzar = (int) (simpleExoPlayer.getDuration() * porcentaje);
 
-        long avance = simpleExoPlayer.getCurrentPosition() + (porcentajeAvanzar / 1000);
+        long incremento = simpleExoPlayer.getCurrentPosition() + (porcentajeAvanzar / 1000);
 
-        if (avance < simpleExoPlayer.getDuration()) {
-            simpleExoPlayer.seekTo(avance);
+        if (incremento < simpleExoPlayer.getDuration()) {
+            simpleExoPlayer.seekTo(incremento);
             updateSeekbar();
+            updateSwipeCurrentTime();
         }
     }
 
@@ -411,7 +441,8 @@ public class VideoPlayerActivity extends AppCompatActivity {
             simpleExoPlayer.stop();
             simpleExoPlayer.prepare(getMediaSource());
             simpleExoPlayer.setPlayWhenReady(true);
-        }
+        } else
+            finish();
     }
 
     private void playPrevious() {
@@ -426,16 +457,14 @@ public class VideoPlayerActivity extends AppCompatActivity {
     }
 
     private void updateButtons() {
-        if (index == 0 && simpleExoPlayer.getCurrentPosition() < simpleExoPlayer.getDuration() * 0.05) {
+        if (index == 0 && simpleExoPlayer.getCurrentPosition() < simpleExoPlayer.getDuration() * 0.05)
             btnPrevious.setVisibility(View.INVISIBLE);
-            btnNext.setVisibility(View.VISIBLE);
-        } else if (index == videos.size() - 1) {
+        else
+            btnPrevious.setVisibility(View.VISIBLE);
+        if (index == videos.size() - 1)
             btnNext.setVisibility(View.INVISIBLE);
-            btnPrevious.setVisibility(View.VISIBLE);
-        } else {
+        else
             btnNext.setVisibility(View.VISIBLE);
-            btnPrevious.setVisibility(View.VISIBLE);
-        }
     }
 
     private void initPlayer() {
