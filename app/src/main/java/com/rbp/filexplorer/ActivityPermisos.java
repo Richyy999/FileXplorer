@@ -31,6 +31,7 @@ public class ActivityPermisos extends AppCompatActivity {
             case 0:
                 if (grantResults.length > 0 && !deniedPermission()) {
                     Intent intent = new Intent(ActivityPermisos.this, ActivityCarpeta.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                 } else {
                     ((ActivityManager) Objects.requireNonNull(this.getSystemService(ACTIVITY_SERVICE))).clearApplicationUserData();

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/seekBarVolumenLayout"
+    android:layout_width="200dp"
+    android:layout_height="25dp"
+    android:layout_marginTop="16dp"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent">
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0.7"
+        android:background="@drawable/seekbar_info_background"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="8dp"
+            android:contentDescription="@string/descIconoVolumen"
+            android:src="@drawable/icono_volumen_blanco" />
+
+        <SeekBar
+            android:id="@+id/seekBarVolumen"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:indeterminate="false"
+            android:progressDrawable="@drawable/seekbar"
+            android:splitTrack="false" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -44,4 +44,6 @@
     <string name="descNextButton">Icono de siguiente</string>
     <string name="descPreviousButton">Icono de anterior</string>
     <string name="share">Compartir</string>
+    <string name="descIconoBrillo">Icono de brillo</string>
+    <string name="descIconoVolumen">Icono de volumen</string>
 </resources>
