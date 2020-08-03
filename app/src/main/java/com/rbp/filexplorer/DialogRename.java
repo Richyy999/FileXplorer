@@ -5,6 +5,8 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.text.InputFilter;
+import android.text.Spanned;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.MimeTypeMap;
@@ -15,6 +17,8 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.rbp.filexplorer.modelo.FileUtils;
 import com.rbp.filexplorer.modelo.entidad.Archivo;
+
+import java.util.regex.Pattern;
 
 public class DialogRename extends Dialog {
 
@@ -62,7 +66,7 @@ public class DialogRename extends Dialog {
         this.txtRename.setText(archivo.getName());
         this.txtRename.requestFocus();
 
-        String hint = "";
+        String hint;
 
         if (archivo.isDirectory())
             hint = this.activityCarpeta.getResources().getString(R.string.renameFolder);

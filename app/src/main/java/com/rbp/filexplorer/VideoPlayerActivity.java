@@ -3,12 +3,19 @@ package com.rbp.filexplorer;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.res.Configuration;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
 import android.widget.ImageView;
@@ -56,6 +63,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private ConstraintLayout toolbar;
     private ConstraintLayout seekBarLayout;
     private ConstraintLayout playPauseLayout;
+    private ConstraintLayout seekBarInfoLayout;
+    private ConstraintLayout seekBarBrilloLayout;
+    private ConstraintLayout seekBarVolumenLayout;
 
     private ImageView btnBack;
     private ImageView btnPlayPause;
@@ -63,14 +73,20 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private ImageView btnNext;
 
     private SeekBar seekBar;
+    private SeekBar seekBarInfo;
+    private SeekBar seekBarBrillo;
+    private SeekBar seekBarVolumen;
 
     private TextView lblTitle;
     private TextView lblCurrentTime;
     private TextView lblDuration;
+    private TextView lblCurrentTimeInfo;
 
     private View clickableView;
 
     private SimpleExoPlayer simpleExoPlayer;
+
+    private Window window;
 
     private Runnable seekbarRunnable;
     private Runnable hideElements;
@@ -78,11 +94,17 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
     private Handler handler;
 
+    private ContentResolver resolver;
+
+    private AudioManager audioManager;
+
     private int index;
+    private int originalBrightness;
 
     private boolean isPlaying;
     private boolean isShowed;
     private boolean wasPlaying;
+    private boolean hasSwiped;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +114,12 @@ public class VideoPlayerActivity extends AppCompatActivity {
             cargarVistaSeekbar();
         else
             setContentView(R.layout.activity_video_player);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.System.canWrite(getApplicationContext())) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+                startActivity(intent);
+            }
+        }
         getFiles();
         initPlayer();
         cargarListeners(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
@@ -118,6 +146,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
     protected void onDestroy() {
         if (simpleExoPlayer != null)
             simpleExoPlayer.stop();
+        android.provider.Settings.System.putInt(resolver, Settings.System.SCREEN_BRIGHTNESS, originalBrightness);
+        WindowManager.LayoutParams params = window.getAttributes();
+        params.screenBrightness = originalBrightness / 255f;
+        window.setAttributes(params);
+
         super.onDestroy();
     }
 
@@ -179,6 +212,10 @@ public class VideoPlayerActivity extends AppCompatActivity {
     }
 
     private void cargarVistaSeekbar() {
+        resolver = getApplicationContext().getContentResolver();
+        window = getWindow();
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
         setContentView(R.layout.activity_video_player_seek_bar);
 
         clickableView = findViewById(R.id.clickableSurface);
@@ -186,8 +223,22 @@ public class VideoPlayerActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbarVideo);
         seekBarLayout = findViewById(R.id.videoSeekbarLayout);
         playPauseLayout = findViewById(R.id.playButtonLayout);
+        seekBarInfoLayout = findViewById(R.id.seekbarInfoVideoLayout);
+        seekBarBrilloLayout = findViewById(R.id.seekBarBrilloLayout);
+        seekBarVolumenLayout = findViewById(R.id.seekBarVolumenLayout);
 
         seekBar = findViewById(R.id.seekBarVideo);
+        seekBarInfo = findViewById(R.id.seekBarInfoVideo);
+        seekBarInfo.getThumb().mutate().setAlpha(0);
+
+        seekBarBrillo = findViewById(R.id.seekBarBrillo);
+        seekBarBrillo.getThumb().mutate().setAlpha(0);
+        seekBarBrillo.setMax(19);
+
+        seekBarVolumen = findViewById(R.id.seekBarVolumen);
+        seekBarVolumen.getThumb().mutate().setAlpha(0);
+        seekBarVolumen.setMax(audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
+        seekBarVolumen.setProgress(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC));
 
         btnBack = findViewById(R.id.imgBackVideo);
         btnNext = findViewById(R.id.imgNext);
@@ -197,6 +248,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
         lblCurrentTime = findViewById(R.id.lblCurrentTime);
         lblDuration = findViewById(R.id.lblDuration);
         lblTitle = findViewById(R.id.titleVideo);
+        lblCurrentTimeInfo = findViewById(R.id.lblCurrentTimeInfo);
 
         handler = new Handler();
 
@@ -207,7 +259,17 @@ public class VideoPlayerActivity extends AppCompatActivity {
             }
         };
 
+        try {
+            originalBrightness = Settings.System.getInt(resolver, Settings.System.SCREEN_BRIGHTNESS);
+            seekBarBrillo.setProgress((int) (originalBrightness / 255f));
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+        }
+
         loadAnimations();
+        hideSwipeInfo();
+        hideSeekbarBrillo();
+        hideSeekBarVolumen();
     }
 
     private void cargarListeners(boolean sdk) {
@@ -236,6 +298,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
                             long currentTime = simpleExoPlayer.getDuration();
                             lblDuration.setText(getCurrentTime(currentTime));
                             seekBar.setMax((int) currentTime);
+                            seekBarInfo.setMax((int) currentTime);
                             btnPlayPause.setImageResource(R.drawable.pause_white);
                             updateButtons();
                             updateSeekbar();
@@ -282,25 +345,59 @@ public class VideoPlayerActivity extends AppCompatActivity {
         if (sdk) {
             clickableView.setOnTouchListener(new SwipeListener() {
                 @Override
-                public void swipeUp(float startY, float y) {
-                    Log.d("CURRENT Y", String.valueOf(y));
+                public void swipeUp(float startY, float y, float startX, float x) {
+                    float diferencia = startY - y;
+                    int orientation = getResources().getConfiguration().orientation;
+                    if ((orientation == Configuration.ORIENTATION_PORTRAIT && x < 280) || (orientation == Configuration.ORIENTATION_LANDSCAPE && x < 600)) {
+                        android.provider.Settings.System.putInt(resolver, android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE,
+                                android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
+                        if (diferencia < 0)
+                            bajarBrillo(Math.abs(diferencia));
+                        else
+                            subirBrillo(Math.abs(diferencia));
+                    } else if ((orientation == Configuration.ORIENTATION_PORTRAIT && x > 800) || (orientation == Configuration.ORIENTATION_LANDSCAPE && x > 1700)) {
+                        if (diferencia < 0)
+                            bajarVolumen(Math.abs(diferencia));
+                        else
+                            subirVolumen(Math.abs(diferencia));
+                    }
                 }
 
                 @Override
-                public void swipeDown(float startY, float y) {
-                    Log.d("CURRENT Y", String.valueOf(y));
+                public void swipeDown(float startY, float y, float startX, float x) {
+                    float diferencia = startY - y;
+                    int orientation = getResources().getConfiguration().orientation;
+                    if ((orientation == Configuration.ORIENTATION_PORTRAIT && x < 280) || (orientation == Configuration.ORIENTATION_LANDSCAPE && x < 600)) {
+                        android.provider.Settings.System.putInt(resolver, android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE,
+                                android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
+                        if (diferencia < 0)
+                            bajarBrillo(Math.abs(diferencia));
+                        else
+                            subirBrillo(Math.abs(diferencia));
+                    } else if ((orientation == Configuration.ORIENTATION_PORTRAIT && x > 800) || (orientation == Configuration.ORIENTATION_LANDSCAPE && x > 1700)) {
+                        if (diferencia < 0)
+                            bajarVolumen(Math.abs(diferencia));
+                        else
+                            subirVolumen(Math.abs(diferencia));
+                    }
                 }
 
                 @Override
-                public void swipeLeft(float startX, float x) {
+                public void swipeLeft(float startX, float x, float startY, float y) {
                     float diferencia = startX - x;
-                    retroceder(Math.abs(diferencia));
+                    if (diferencia > 0)
+                        retroceder(Math.abs(diferencia));
+                    else
+                        avanzar(Math.abs(diferencia));
                 }
 
                 @Override
-                public void swipeRight(float startX, float x) {
+                public void swipeRight(float startX, float x, float startY, float y) {
                     float diferencia = startX - x;
-                    avanzar(Math.abs(diferencia));
+                    if (diferencia > 0)
+                        retroceder(Math.abs(diferencia));
+                    else
+                        avanzar(Math.abs(diferencia));
                 }
 
                 @Override
@@ -312,6 +409,16 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 @Override
                 public void onClick() {
                     showHideDisplay();
+                }
+
+                @Override
+                public void onActionUp() {
+                    hideSwipeInfo();
+                    hideSeekbarBrillo();
+                    hideSeekBarVolumen();
+                    if (!simpleExoPlayer.getPlayWhenReady() && hasSwiped)
+                        reproducir();
+                    hasSwiped = false;
                 }
             });
 
@@ -367,29 +474,116 @@ public class VideoPlayerActivity extends AppCompatActivity {
         }
     }
 
+    private void updateSeekbarVolumen() {
+        seekBarVolumenLayout.setVisibility(View.VISIBLE);
+        seekBarVolumen.setProgress(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC));
+    }
+
+    private void subirVolumen(float diferencia) {
+        int porcentaje = (int) (diferencia * 0.015);
+        int porcentajeIncremento = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) * porcentaje;
+        int incremento = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) + (porcentajeIncremento / 50);
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, incremento, 0);
+        updateSeekbarVolumen();
+    }
+
+    private void bajarVolumen(float diferencia) {
+        int porcentaje = (int) (diferencia * 0.015);
+        int porcentajeIncremento = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) * porcentaje;
+        int incremento = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) - (porcentajeIncremento / 50);
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, incremento, 0);
+        updateSeekbarVolumen();
+    }
+
+    private void hideSeekBarVolumen() {
+        seekBarVolumenLayout.setVisibility(View.INVISIBLE);
+    }
+
+    private void hideSeekbarBrillo() {
+        seekBarBrilloLayout.setVisibility(View.INVISIBLE);
+    }
+
+    private void updateSeekbarBrillo() {
+        seekBarBrilloLayout.setVisibility(View.VISIBLE);
+        int progress = (int) window.getAttributes().screenBrightness;
+        seekBarBrillo.setProgress(progress);
+    }
+
+    private void subirBrillo(float diferencia) {
+        int porcentaje = (int) (diferencia * 0.2);
+
+        try {
+            int brilloActual = Settings.System.getInt(resolver, Settings.System.SCREEN_BRIGHTNESS);
+            int brilloNuevo = brilloActual + porcentaje;
+            if (brilloNuevo / 255f < 20 && brilloNuevo > brilloActual) {
+                android.provider.Settings.System.putInt(resolver, Settings.System.SCREEN_BRIGHTNESS, brilloNuevo);
+                WindowManager.LayoutParams params = window.getAttributes();
+                params.screenBrightness = brilloNuevo / 255f;
+                window.setAttributes(params);
+                updateSeekbarBrillo();
+            }
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void bajarBrillo(float diferencia) {
+        int porcentaje = (int) (diferencia * 0.2);
+
+        try {
+            int brilloActual = Settings.System.getInt(resolver, Settings.System.SCREEN_BRIGHTNESS);
+            int brilloNuevo = brilloActual - porcentaje;
+            if (brilloNuevo / 255f > 0 && brilloNuevo < brilloActual) {
+                android.provider.Settings.System.putInt(resolver, Settings.System.SCREEN_BRIGHTNESS, brilloNuevo);
+                WindowManager.LayoutParams params = window.getAttributes();
+                params.screenBrightness = brilloNuevo / 255f;
+                window.setAttributes(params);
+                updateSeekbarBrillo();
+            }
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void hideSwipeInfo() {
+        seekBarInfoLayout.setVisibility(View.GONE);
+    }
+
+    private void updateSwipeCurrentTime() {
+        if (isShowed)
+            showHideDisplay();
+        seekBarInfoLayout.setVisibility(View.VISIBLE);
+        seekBarInfo.setProgress((int) simpleExoPlayer.getCurrentPosition());
+        lblCurrentTimeInfo.setText(getCurrentTime(simpleExoPlayer.getCurrentPosition()) + "/" + getCurrentTime(simpleExoPlayer.getDuration()));
+    }
+
     private void retroceder(float diferencia) {
+        hasSwiped = true;
         int porcentaje = (int) (diferencia * 0.01);
 
         int porcentajeAvanzar = (int) (simpleExoPlayer.getDuration() * porcentaje);
 
-        long avance = simpleExoPlayer.getCurrentPosition() - (porcentajeAvanzar / 1000);
+        long incremento = simpleExoPlayer.getCurrentPosition() - (porcentajeAvanzar / 1000);
 
-        if (avance > 0) {
+        if (incremento > 0) {
             updateSeekbar();
-            simpleExoPlayer.seekTo(avance);
+            simpleExoPlayer.seekTo(incremento);
+            updateSwipeCurrentTime();
         }
     }
 
     private void avanzar(float diferencia) {
+        hasSwiped = true;
         int porcentaje = (int) (diferencia * 0.01);
 
         int porcentajeAvanzar = (int) (simpleExoPlayer.getDuration() * porcentaje);
 
-        long avance = simpleExoPlayer.getCurrentPosition() + (porcentajeAvanzar / 1000);
+        long incremento = simpleExoPlayer.getCurrentPosition() + (porcentajeAvanzar / 1000);
 
-        if (avance < simpleExoPlayer.getDuration()) {
-            simpleExoPlayer.seekTo(avance);
+        if (incremento < simpleExoPlayer.getDuration()) {
+            simpleExoPlayer.seekTo(incremento);
             updateSeekbar();
+            updateSwipeCurrentTime();
         }
     }
 
@@ -411,7 +605,8 @@ public class VideoPlayerActivity extends AppCompatActivity {
             simpleExoPlayer.stop();
             simpleExoPlayer.prepare(getMediaSource());
             simpleExoPlayer.setPlayWhenReady(true);
-        }
+        } else
+            finish();
     }
 
     private void playPrevious() {
@@ -426,16 +621,14 @@ public class VideoPlayerActivity extends AppCompatActivity {
     }
 
     private void updateButtons() {
-        if (index == 0 && simpleExoPlayer.getCurrentPosition() < simpleExoPlayer.getDuration() * 0.05) {
+        if (index == 0 && simpleExoPlayer.getCurrentPosition() < simpleExoPlayer.getDuration() * 0.05)
             btnPrevious.setVisibility(View.INVISIBLE);
-            btnNext.setVisibility(View.VISIBLE);
-        } else if (index == videos.size() - 1) {
+        else
+            btnPrevious.setVisibility(View.VISIBLE);
+        if (index == videos.size() - 1)
             btnNext.setVisibility(View.INVISIBLE);
-            btnPrevious.setVisibility(View.VISIBLE);
-        } else {
+        else
             btnNext.setVisibility(View.VISIBLE);
-            btnPrevious.setVisibility(View.VISIBLE);
-        }
     }
 
     private void initPlayer() {
