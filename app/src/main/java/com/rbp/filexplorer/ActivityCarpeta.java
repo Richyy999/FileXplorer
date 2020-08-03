@@ -309,6 +309,7 @@ public class ActivityCarpeta extends AppCompatActivity implements AdaptadorCarpe
      */
     private void getFiles() {
         archivos = new LinkedList<>();
+        Log.d("PATH", path);
         carpeta = new Archivo(path, this);
         File[] archivos = carpeta.listFiles();
         List<Archivo> fileList = new ArrayList<>();
